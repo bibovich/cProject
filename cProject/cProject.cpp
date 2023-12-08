@@ -1,5 +1,4 @@
 // cProject.cpp : Defines the entry point for the application.
-//
 #include <windows.h>
 #include <tchar.h>
 #include <CommCtrl.h>
@@ -7,45 +6,33 @@
 
 #pragma comment (lib, "comctl32.lib")
 
+/* The base address of the module in which the code is running. */
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+/* Instance handle of the current module. */
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 
-inline constexpr int ID_SELF_DESTROY_BUTTON = 100;
+// Submenu IDs constants
+inline constexpr int SUBMENU1_ID[] = { 10001, 10002, 10003, 10004 };
+inline constexpr int SUBMENU2_ID[] = { 10010, 10020, 10030, 10040 };
+inline constexpr int SUBMENU3_ID[] = { 10100, 10200, 10300, 10400 };
+inline constexpr int SUBMENU4_ID[] = { 11000, 12000, 13000, 14000 };
+
 inline constexpr UINT_PTR ID_LISTBOX = 101;
 
-inline constexpr int ID_FILE_NEW = 3000;
-inline constexpr int ID_FILE_OPEN = 3001;
-inline constexpr int ID_FILE_SAVE= 3002;
-inline constexpr int ID_EDIT_CUT = 3003;
-inline constexpr int ID_EDIT_COPY = 3004;
-inline constexpr int ID_EDIT_PASTE = 3005;
-inline constexpr int ID_FILE_PRINT = 3006;
-inline constexpr int ID_HELP_ABOUT = 3007;
+/* Creating submenus function */
+void submenuAppend(HMENU& submenu, const int SUBMENU_ID[], const wchar_t SUBMENU_NAME[4][10]);
 
-
-inline constexpr TBBUTTON tbb[] = {
-  { 0, ID_FILE_NEW,  TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
-  { 1, ID_FILE_OPEN, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
-  { 2, ID_FILE_SAVE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
-  { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
-  { 3, ID_EDIT_CUT,   TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
-  { 4, ID_EDIT_COPY,  TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
-  { 5, ID_EDIT_PASTE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
-  { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
-  { 6, ID_FILE_PRINT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
-  { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
-  { 7, ID_HELP_ABOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0}
-};
-
+/* Creating main menus function */
 template <typename T>
 void mainmenuAppend(HMENU& mainmenu, HMENU submenus[], T& separator);
 
-void switchID1(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID);
-void switchID2(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID);
-void switchID3(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID);
-void switchID4(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID);
+/* Functions which handles different menu item IDs and invokes submenus item creations */
+void switchID1(HWND& g_hSubMenuWindow, int menuItemID);
+void switchID2(HWND& g_hSubMenuWindow, int menuItemID);
+void switchID3(HWND& g_hSubMenuWindow, int menuItemID);
+void switchID4(HWND& g_hSubMenuWindow, int menuItemID);
 
-
+/* Submenu elements creation functions */
 void case_2(HWND& g_hSubMenuWindow);
 void case_3(HWND& g_hSubMenuWindow);
 void case_4(HWND& g_hSubMenuWindow);
@@ -67,16 +54,16 @@ _Use_decl_annotations_ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     // Window creation
     HWND hwnd = CreateWindowEx(0, CLASS_NAME, _T("App"), WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
-        NULL, NULL, hInstance, NULL);
+        nullptr, nullptr, hInstance, nullptr);
 
-    if (hwnd == NULL)
+    if (!hwnd)
         return 0;
 
     ShowWindow(hwnd, nCmdShow);
 
     // Run the message loop
     MSG msg = {};
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (GetMessage(&msg, nullptr, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -87,84 +74,114 @@ _Use_decl_annotations_ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-    case WM_CREATE: {
-        HMENU mainmenu = CreatePopupMenu();
-        auto separator = [&mainmenu] {
-            return AppendMenu(mainmenu, MF_SEPARATOR, 0, NULL);
-        };
+        case WM_CREATE: {
 
-        HMENU submenu1 = CreatePopupMenu();
-        AppendMenu(submenu1, MF_STRING, 10001, L"submenu 1");
-        AppendMenu(submenu1, MF_STRING, 10002, L"submenu 2");
-        AppendMenu(submenu1, MF_STRING, 10003, L"submenu 3");
-        AppendMenu(submenu1, MF_STRING, 10004, L"submenu 4");
+            HMENU mainmenu = CreatePopupMenu();
+            HMENU submenu1, submenu2, submenu3, submenu4;
 
-        HMENU submenu2 = CreatePopupMenu();
-        AppendMenu(submenu2, MF_STRING, 10010, L"submenu 1");
-        AppendMenu(submenu2, MF_STRING, 10020, L"submenu 2");
-        AppendMenu(submenu2, MF_STRING, 10030, L"submenu 3");
-        AppendMenu(submenu2, MF_STRING, 10040, L"submenu 4");
+            HMENU submenus[] = { submenu1 = CreatePopupMenu(),
+                                 submenu2 = CreatePopupMenu(), 
+                                 submenu3 = CreatePopupMenu(),
+                                 submenu4 = CreatePopupMenu()
+            };
 
-        HMENU submenu3 = CreatePopupMenu();
-        AppendMenu(submenu3, MF_STRING, 10100, L"submenu 1");
-        AppendMenu(submenu3, MF_STRING, 10200, L"submenu 2");
-        AppendMenu(submenu3, MF_STRING, 10300, L"submenu 3");
-        AppendMenu(submenu3, MF_STRING, 10400, L"submenu 4");
+            // Menu separator lambda
+            auto separator = [&mainmenu] {
+                return AppendMenu(mainmenu, MF_SEPARATOR, 0, nullptr);
+            };
 
-        HMENU submenu4 = CreatePopupMenu();
-        AppendMenu(submenu4, MF_STRING, 11000, L"submenu 1");
-        AppendMenu(submenu4, MF_STRING, 12000, L"submenu 2");
-        AppendMenu(submenu4, MF_STRING, 13000, L"submenu 3");
-        AppendMenu(submenu4, MF_STRING, 14000, L"submenu 4");
+            const wchar_t SUBMENU_NAME[4][10] = {
+                L"submenu 1",
+                L"submenu 2",
+                L"submenu 3",
+                L"submenu 4"
+            };
 
-        HMENU submenus[] = {submenu1, submenu2, submenu3, submenu4};
-        mainmenuAppend(mainmenu, submenus, separator);
+            // Submenus creation
+            submenuAppend(submenus[0], SUBMENU1_ID, SUBMENU_NAME);
+            submenuAppend(submenus[1], SUBMENU2_ID, SUBMENU_NAME);
+            submenuAppend(submenus[2], SUBMENU3_ID, SUBMENU_NAME);
+            submenuAppend(submenus[3], SUBMENU4_ID, SUBMENU_NAME);
 
+            // Mainmenus creation
+            mainmenuAppend(mainmenu, submenus, separator);
 
-        POINT p;
-        GetCursorPos(&p);
-        TrackPopupMenu(mainmenu, TPM_LEFTBUTTON, p.x, p.y, 0, hwnd, 0);
-        break;
-    }
-    case WM_COMMAND: {
-        LPCWSTR wstr = L"Default Menu";
-        HWND g_hSubMenuWindow = CreateWindowEx(0, _T("STATIC"), wstr,
-            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300,
-            NULL, NULL, NULL, NULL);
-        if (HIWORD(wParam) == 0 && lParam == 0) {
-            int menuItemID = LOWORD(wParam);
-
-        //     Check which submenu item is selected and create a new window accordingly
-            if (menuItemID >= 10001 && menuItemID <= 10004)
-                switchID1(g_hSubMenuWindow, wstr, menuItemID);
-            else if (menuItemID >= 10010 && menuItemID <= 10040)
-                switchID2(g_hSubMenuWindow, wstr, menuItemID);
-            else if (menuItemID >= 10100 && menuItemID <= 10400)
-                switchID3(g_hSubMenuWindow, wstr, menuItemID);
-            else if (menuItemID >= 11000 && menuItemID <= 14000)
-                switchID4(g_hSubMenuWindow, wstr, menuItemID);
+            // Cursor position
+            POINT p;
+            GetCursorPos(&p);
+            TrackPopupMenu(mainmenu, TPM_LEFTBUTTON, p.x, p.y, 0, hwnd, 0);
+            break;
         }
+        case WM_COMMAND: {
+            // Parental window handle
+            HWND g_hSubMenuWindow = CreateWindowEx(0, _T("STATIC"), L"Default Menu",
+                WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300,
+                nullptr, nullptr, nullptr, nullptr);
 
+            // IDs for the toolbar button
+            constexpr int ID_FILE_NEW = 3000;
+            constexpr int ID_FILE_OPEN = 3001;
+            constexpr int ID_FILE_SAVE = 3002;
+            constexpr int ID_EDIT_CUT = 3003;
+            constexpr int ID_EDIT_COPY = 3004;
+            constexpr int ID_EDIT_PASTE = 3005;
+            constexpr int ID_FILE_PRINT = 3006;
+            constexpr int ID_HELP_ABOUT = 3007;
 
-        // Toolbar creation
-        HWND g_Toolbar = CreateToolbarEx(g_hSubMenuWindow, WS_CHILD | WS_VISIBLE | CCS_TOP, 1,
-            0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR, tbb, 3, 0, 0, 0, 0, sizeof(TBBUTTON));
+            if (HIWORD(wParam) == 0 && lParam == 0) {
+                int menuItemID = LOWORD(wParam);
 
-        ShowWindow(g_hSubMenuWindow, SW_SHOWNORMAL);
-        break;
-    }
-    case WM_DESTROY: {
-        // Quit the application
-        PostQuitMessage(0);
-        break;
-    }
-    default:
-        // Default window procedure for other messages
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
+            //     Check which submenu item is selected and create a new window accordingly
+                if (menuItemID >= SUBMENU1_ID[0] && menuItemID <= SUBMENU1_ID[3])
+                    switchID1(g_hSubMenuWindow, menuItemID);
+                else if (menuItemID >= SUBMENU2_ID[0] && menuItemID <= SUBMENU2_ID[3])
+                    switchID2(g_hSubMenuWindow, menuItemID);
+                else if (menuItemID >= SUBMENU3_ID[0] && menuItemID <= SUBMENU3_ID[3])
+                    switchID3(g_hSubMenuWindow, menuItemID);
+                else if (menuItemID >= SUBMENU4_ID[0] && menuItemID <= SUBMENU4_ID[3])
+                    switchID4(g_hSubMenuWindow, menuItemID);
+            }
+
+            constexpr TBBUTTON tbb[] = {
+              { 0, ID_FILE_NEW,  TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
+              { 1, ID_FILE_OPEN, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
+              { 2, ID_FILE_SAVE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
+              { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
+              { 3, ID_EDIT_CUT,   TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
+              { 4, ID_EDIT_COPY,  TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
+              { 5, ID_EDIT_PASTE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
+              { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
+              { 6, ID_FILE_PRINT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0},
+              { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
+              { 7, ID_HELP_ABOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0}
+            };
+
+            // Toolbar creation
+            HWND g_Toolbar = CreateToolbarEx(g_hSubMenuWindow, WS_CHILD | WS_VISIBLE | CCS_TOP, 1,
+                0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR, tbb, 3, 0, 0, 0, 0, sizeof(TBBUTTON));
+
+            ShowWindow(g_hSubMenuWindow, SW_SHOWNORMAL);
+            break;
+        }
+        case WM_DESTROY: {
+            // Quit the application
+            PostQuitMessage(0);
+            break;
+        }
+        default:
+            // Default window procedure for other messages
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        }
     return 0;
 }
 
+/* Creating submenus function */
+void submenuAppend(HMENU& submenu, const int SUBMENU_ID[], const wchar_t SUBMENU_NAME[4][10]) {
+    for (int i{}; i < 4; ++i) 
+        AppendMenu(submenu, MF_STRING, SUBMENU_ID[i], SUBMENU_NAME[i]);
+}
+
+/* Creating main menus function */
 template <typename T>
 void mainmenuAppend(HMENU& mainmenu, HMENU submenus[], T& separator) {
     AppendMenu(mainmenu, MF_POPUP, (UINT_PTR)submenus[0], L"&menu1");
@@ -176,110 +193,93 @@ void mainmenuAppend(HMENU& mainmenu, HMENU submenus[], T& separator) {
     AppendMenu(mainmenu, MF_POPUP, (UINT_PTR)submenus[3], L"&menu4");
 }
 
-
-
-void switchID1(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID) {
+/* Functions which handles different menu item IDs and invokes submenus item creations */
+void switchID1(HWND& g_hSubMenuWindow, int menuItemID) {
     switch (menuItemID) {
-        case 10001: {
-            wstr = L"Menu 1, Submenu 1 Window";
-            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, NULL, NULL, NULL);
+        case SUBMENU1_ID[0]: {
+            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, nullptr, nullptr, nullptr);
             ShowWindow(chckBox, SW_SHOWNORMAL);
             break;
         }
-        case 10002: {
-            wstr = L"Menu 1, Submenu 2 Window";
+        case SUBMENU1_ID[1]: {
             case_2(g_hSubMenuWindow);
             break;
         }
-        case 10003: {
-            wstr = L"Menu 1, Submenu 3 Window";
+        case SUBMENU1_ID[2]: {
             case_3(g_hSubMenuWindow);
             break;
         }
-        case 10004: {
-            wstr = L"Menu 1, Submenu 4 Window";
+        case SUBMENU1_ID[3]: {
             case_4(g_hSubMenuWindow);
             break;
         }
     }
 }
-void switchID2(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID) {
+void switchID2(HWND& g_hSubMenuWindow, int menuItemID) {
     switch (menuItemID) {
-        case 10010: {
-            wstr = L"Menu 2, Submenu 1 Window";
-            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, NULL, NULL, NULL);
+        case SUBMENU2_ID[0]: {
+            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, nullptr, nullptr, nullptr);
             ShowWindow(chckBox, SW_SHOWNORMAL);
             break;
         }
-        case 10020: {
-            wstr = L"Menu 2, Submenu 2 Window";
+        case SUBMENU2_ID[1]: {
             case_2(g_hSubMenuWindow);
             break;
         }
-        case 10030: {
-            wstr = L"Menu 2, Submenu 3 Window";
+        case SUBMENU2_ID[2]: {
             case_3(g_hSubMenuWindow);
             break;
         }
-        case 10040: {
-            wstr = L"Menu 2, Submenu 4 Window";
+        case SUBMENU2_ID[3]: {
             case_4(g_hSubMenuWindow);
             break;
         }
     }
 }
-void switchID3(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID) {
+void switchID3(HWND& g_hSubMenuWindow, int menuItemID) {
     switch (menuItemID) {
-        case 10100: {
-            wstr = L"Menu 3, Submenu 1 Window";
-            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, NULL, NULL, NULL);
+        case SUBMENU3_ID[0]: {
+            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, nullptr, nullptr, nullptr);
             ShowWindow(chckBox, SW_SHOWNORMAL);
             break;
         }
-        case 10200: {
-            wstr = L"Menu 3, Submenu 2 Window";
+        case SUBMENU3_ID[1]: {
             case_2(g_hSubMenuWindow);
             break;
         }
-        case 10300: {
-            wstr = L"Menu 3, Submenu 3 Window";
+        case SUBMENU3_ID[2]: {
             case_3(g_hSubMenuWindow);
             break;
         }
-        case 10400: {
-            wstr = L"Menu 3, Submenu 4 Window";
+        case SUBMENU3_ID[3]: {
             case_4(g_hSubMenuWindow);
             break;
         }
     }
 }
-void switchID4(HWND& g_hSubMenuWindow, LPCWSTR& wstr, int menuItemID) {
+void switchID4(HWND& g_hSubMenuWindow, int menuItemID) {
     switch (menuItemID) {
-        case 11000: {
-            wstr = L"Menu 4, Submenu 1 Window";
-            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, NULL, NULL, NULL);
+        case SUBMENU4_ID[0]: {
+            HWND chckBox = CreateWindow(_T("BUTTON"), _T("Checkbox"), BS_AUTOCHECKBOX, CW_USEDEFAULT, CW_USEDEFAULT, 80, 50, g_hSubMenuWindow, nullptr, nullptr, nullptr);
             ShowWindow(chckBox, SW_SHOWNORMAL);
             break;
         }
-        case 12000: {
-            wstr = L"Menu 4, Submenu 2 Window";
+        case SUBMENU4_ID[1]: {
             case_2(g_hSubMenuWindow);
             break;
         }
-        case 13000: {
-            wstr = L"Menu 4, Submenu 3 Window";
+        case SUBMENU4_ID[2]: {
             case_3(g_hSubMenuWindow);
             break;
         }
-        case 14000: {
-            wstr = L"Menu 4, Submenu 4 Window";
+        case SUBMENU4_ID[3]: {
             case_4(g_hSubMenuWindow);
             break;
         }
     }
 }
 
-
+/* Submenu elements creation functions */
 void case_2(HWND& g_hSubMenuWindow) {
     constexpr int xpos = 100;            // Horizontal position of the window.
     constexpr int ypos = 100;            // Vertical position of the window.
@@ -288,15 +288,14 @@ void case_2(HWND& g_hSubMenuWindow) {
 
     HWND hWndComboBox = CreateWindow(WC_COMBOBOX, TEXT(""),
         CBS_DROPDOWN | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
-        xpos, ypos, nwidth, nheight, g_hSubMenuWindow, NULL, HINST_THISCOMPONENT,
-        NULL);
+        xpos, ypos, nwidth, nheight, g_hSubMenuWindow, nullptr, HINST_THISCOMPONENT,
+        nullptr);
 
     // load the combobox with item list.
-    // Send a CB_ADDSTRING message to load each item
     TCHAR Planets[9][10] = {
-        TEXT("Mercury"), TEXT("Venus"), TEXT("Terra"), TEXT("Mars"),
+        TEXT("Mercury"), TEXT("Venus"), TEXT("Earth"), TEXT("Mars"),
         TEXT("Jupiter"), TEXT("Saturn"), TEXT("Uranus"), TEXT("Neptune"),
-        TEXT("Pluto??")
+        TEXT("Pluto")
     };
 
     TCHAR A[16];
@@ -311,14 +310,14 @@ void case_2(HWND& g_hSubMenuWindow) {
     SendMessage(hWndComboBox, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
 }
 void case_3(HWND& g_hSubMenuWindow) {
-     HWND hList = CreateWindow(_T("ListBox"), _T(""), WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_BORDER | WS_VSCROLL, 40, 40, 250, 60, g_hSubMenuWindow, (HMENU)ID_LISTBOX, NULL, NULL);
+     HWND hList = CreateWindow(_T("ListBox"), _T(""), WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_BORDER | WS_VSCROLL, 40, 40, 250, 60, g_hSubMenuWindow, (HMENU)ID_LISTBOX, nullptr, nullptr);
 
      SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)"1");
      SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)"2");
      SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)"3");
+     SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)"4");
+     SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)"5");
 }
 void case_4(HWND& g_hSubMenuWindow) {
-    HWND editCtlHandle = CreateWindowW(L"Edit", L"", WS_VISIBLE | WS_CHILD | WS_BORDER, 100, 100, 200, 20, g_hSubMenuWindow, NULL, NULL, NULL);
-    //WCHAR placeholderText[] = L"Enter here";
-    SendMessage(editCtlHandle, EM_SETCUEBANNER, FALSE, NULL);
+    HWND editCtlHandle = CreateWindowW(L"Edit", L"", WS_VISIBLE | WS_CHILD | WS_BORDER, 100, 100, 200, 20, g_hSubMenuWindow, nullptr, nullptr, nullptr);
 }
